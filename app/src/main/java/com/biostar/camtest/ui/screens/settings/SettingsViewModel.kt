@@ -39,14 +39,14 @@ class SettingsViewModel @Inject constructor(
                 userPreferences.audioBitrate,
                 userPreferences.audioSampleRate,
                 userPreferences.autoSaveLocation
-            ) { gridType, gridEnabled, quality, bitrate, sampleRate, location ->
+            ) { values: Array<*> ->
                 SettingsUiState(
-                    defaultGridType = gridType,
-                    gridEnabledByDefault = gridEnabled,
-                    videoQuality = quality,
-                    audioBitrate = bitrate,
-                    audioSampleRate = sampleRate,
-                    autoSaveLocation = location
+                    defaultGridType = values[0] as GridType,
+                    gridEnabledByDefault = values[1] as Boolean,
+                    videoQuality = values[2] as String,
+                    audioBitrate = values[3] as Int,
+                    audioSampleRate = values[4] as Int,
+                    autoSaveLocation = values[5] as String
                 )
             }.collect { state ->
                 _uiState.value = state
