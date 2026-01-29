@@ -25,6 +25,11 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit
 ) {
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showQualityDialog by remember { mutableStateOf(false) }
+    var showGridDialog by remember { mutableStateOf(false) }
+    var showStorageDialog by remember { mutableStateOf(false) }
+    var showAudioDialog by remember { mutableStateOf(false) }
+    var showFeedbackDialog by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -66,19 +71,19 @@ fun SettingsScreen(
                     icon = Icons.Default.Videocam,
                     title = "Calidad de video",
                     subtitle = "Ajustar resolución y FPS",
-                    onClick = { /* TODO: Navigate to quality settings */ }
+                    onClick = { showQualityDialog = true }
                 )
                 SettingsItem(
                     icon = Icons.Default.GridOn,
                     title = "Grid por defecto",
                     subtitle = "Regla de 3, cuadrícula o proporción áurea",
-                    onClick = { /* TODO: Navigate to grid settings */ }
+                    onClick = { showGridDialog = true }
                 )
                 SettingsItem(
                     icon = Icons.Default.PhotoLibrary,
                     title = "Ubicación de guardado",
                     subtitle = "Carpeta de fotos y videos",
-                    onClick = { /* TODO: Navigate to storage settings */ }
+                    onClick = { showStorageDialog = true }
                 )
             }
 
@@ -88,7 +93,7 @@ fun SettingsScreen(
                     icon = Icons.Default.Mic,
                     title = "Calidad de audio",
                     subtitle = "Bitrate y frecuencia de muestreo",
-                    onClick = { /* TODO: Navigate to audio settings */ }
+                    onClick = { showAudioDialog = true }
                 )
             }
 
@@ -104,7 +109,7 @@ fun SettingsScreen(
                     icon = Icons.Default.BugReport,
                     title = "Reportar problema",
                     subtitle = "Enviar feedback",
-                    onClick = { /* TODO: Open feedback */ }
+                    onClick = { showFeedbackDialog = true }
                 )
             }
 
@@ -120,47 +125,97 @@ fun SettingsScreen(
         }
     }
 
-    // About Dialog
+    // Dialogs
     if (showAboutDialog) {
-        AlertDialog(
-            onDismissRequest = { showAboutDialog = false },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Videocam,
-                    contentDescription = null,
-                    tint = AccentBlue,
-                    modifier = Modifier.size(48.dp)
-                )
-            },
-            title = {
-                Text(
-                    text = "USB CAM Pro",
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Versión 2.0.0")
-                    Text("Aplicación profesional para cámaras USB")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Características:",
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text("• Grabación de video HD")
-                    Text("• Captura de fotos")
-                    Text("• Grid overlay")
-                    Text("• Galería integrada")
-                    Text("• Controles profesionales")
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showAboutDialog = false }) {
-                    Text("Cerrar")
-                }
-            }
+        InfoDialog(
+            icon = Icons.Default.Videocam,
+            title = "USB CAM Pro",
+            message = "Versión 2.0.0\n\nAplicación profesional para cámaras USB\n\nCaracterísticas:\n• Grabación de video HD\n• Captura de fotos\n• Grid overlay\n• Galería integrada\n• Controles profesionales",
+            onDismiss = { showAboutDialog = false }
         )
     }
+    
+    if (showQualityDialog) {
+        InfoDialog(
+            icon = Icons.Default.Videocam,
+            title = "Calidad de Video",
+            message = "La calidad de video se ajusta automáticamente según la resolución seleccionada en la pantalla de cámara.\n\nResoluciones disponibles:\n• 4K (3840x2160)\n• 1080p (1920x1080)\n• 720p (1280x720)\n\nFPS: 30/60 según capacidad de la cámara",
+            onDismiss = { showQualityDialog = false }
+        )
+    }
+    
+    if (showGridDialog) {
+        InfoDialog(
+            icon = Icons.Default.GridOn,
+            title = "Grid Overlay",
+            message = "Activa el grid desde el botón en la pantalla de cámara.\n\nTipos disponibles:\n• Regla de 3 (Rule of Thirds)\n• Cuadrícula (Square Grid)\n• Proporción Áurea (Golden Ratio)\n\nÚsalo para mejorar la composición de tus fotos y videos.",
+            onDismiss = { showGridDialog = false }
+        )
+    }
+    
+    if (showStorageDialog) {
+        InfoDialog(
+            icon = Icons.Default.PhotoLibrary,
+            title = "Ubicación de Guardado",
+            message = "Las fotos y videos se guardan en:\n\nPictures/USBCam/\n\nPuedes acceder a ellos desde:\n• La galería de la app\n• La app Fotos de tu dispositivo\n• Cualquier explorador de archivos",
+            onDismiss = { showStorageDialog = false }
+        )
+    }
+    
+    if (showAudioDialog) {
+        InfoDialog(
+            icon = Icons.Default.Mic,
+            title = "Calidad de Audio",
+            message = "Configuración de audio para grabación:\n\nBitrate: 128 kbps\nFrecuencia: 44.1 kHz\nCanales: Estéreo\n\nEl audio se captura automáticamente durante la grabación de video.",
+            onDismiss = { showAudioDialog = false }
+        )
+    }
+    
+    if (showFeedbackDialog) {
+        InfoDialog(
+            icon = Icons.Default.BugReport,
+            title = "Reportar Problema",
+            message = "¿Encontraste un problema?\n\nPor favor contacta al desarrollador con:\n• Descripción del problema\n• Pasos para reproducirlo\n• Modelo de cámara USB\n• Versión de Android\n\nGracias por ayudarnos a mejorar.",
+            onDismiss = { showFeedbackDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun InfoDialog(
+    icon: ImageVector,
+    title: String,
+    message: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = AccentBlue,
+                modifier = Modifier.size(48.dp)
+            )
+        },
+        title = {
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Entendido")
+            }
+        }
+    )
 }
 
 @Composable

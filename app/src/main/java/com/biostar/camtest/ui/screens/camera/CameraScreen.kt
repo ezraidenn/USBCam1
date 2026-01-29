@@ -89,6 +89,7 @@ fun CameraScreen(
                             factory = { context ->
                                 TextureView(context).apply {
                                     textureView = this
+                                    setBackgroundColor(android.graphics.Color.parseColor("#262626"))
                                     surfaceTextureListener = object : TextureView.SurfaceTextureListener {
                                         override fun onSurfaceTextureAvailable(
                                             surface: android.graphics.SurfaceTexture,
