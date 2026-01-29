@@ -28,6 +28,7 @@ class CameraRepository @Inject constructor(
 ) {
     private var cameraHelper: ICameraHelper? = null
     private var videoRecorder: VideoRecorder? = null
+    private var cameraControlsManager: CameraControlsManager? = null
     private var durationUpdateJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Main)
     
@@ -47,6 +48,7 @@ class CameraRepository @Inject constructor(
         val helper = CameraHelper()
         cameraHelper = helper
         videoRecorder = VideoRecorder(context, helper)
+        cameraControlsManager = CameraControlsManager(helper)
         
         val callback = object : ICameraHelper.StateCallback {
             override fun onAttach(device: UsbDevice) {
@@ -178,6 +180,12 @@ class CameraRepository @Inject constructor(
     fun updateAudioConfig(bitrate: Int, sampleRate: Int) {
         val config = AudioConfig(bitrate = bitrate, sampleRate = sampleRate)
         videoRecorder?.updateAudioConfig(config)
+    }
+    
+    fun getCameraControlsManager(): CameraControlsManager? = cameraControlsManager
+    
+    fun initializeCameraControls() {
+        cameraControlsManager?.initializeControls()
     }
 }
 

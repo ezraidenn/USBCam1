@@ -178,7 +178,7 @@ class CameraViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 if (_uiState.value.isRecording) {
-                    stopRecording()
+                    cameraRepository.stopRecording()
                 }
                 cameraRepository.stopPreview()
                 cameraRepository.closeCamera()
