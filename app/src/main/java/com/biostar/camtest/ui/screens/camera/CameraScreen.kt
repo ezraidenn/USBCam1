@@ -79,7 +79,7 @@ fun CameraScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(24.dp))
-                        .background(Gray700)
+                        .background(White)
                 )
                 when (val state = uiState.cameraState) {
                     is CameraState.Idle, is CameraState.Connecting -> {
@@ -357,7 +357,7 @@ private fun CameraPlaceholder(
             text = "Cámara USB",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = White
+            color = Gray900
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -365,7 +365,7 @@ private fun CameraPlaceholder(
         Text(
             text = if (isConnecting) "Conectando..." else "Conecta tu cámara USB para comenzar",
             style = MaterialTheme.typography.bodyLarge,
-            color = Gray300,
+            color = Gray600,
             textAlign = TextAlign.Center
         )
 
@@ -451,7 +451,7 @@ private fun ErrorPlaceholder(
             text = "Error de Conexión",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = White
+            color = Gray900
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -459,7 +459,7 @@ private fun ErrorPlaceholder(
         Text(
             text = message,
             style = MaterialTheme.typography.bodyLarge,
-            color = Gray300,
+            color = Gray600,
             textAlign = TextAlign.Center
         )
 

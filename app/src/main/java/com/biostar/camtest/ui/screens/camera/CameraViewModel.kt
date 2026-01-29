@@ -5,6 +5,7 @@ import android.view.Surface
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.biostar.camtest.data.models.*
+import com.biostar.camtest.data.preferences.UserPreferences
 import com.biostar.camtest.data.repository.CameraEvent
 import com.biostar.camtest.data.repository.CameraRepository
 import com.biostar.camtest.data.repository.MediaRepository
@@ -35,7 +36,8 @@ data class CameraUiState(
 @HiltViewModel
 class CameraViewModel @Inject constructor(
     private val cameraRepository: CameraRepository,
-    private val mediaRepository: MediaRepository
+    private val mediaRepository: MediaRepository,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CameraUiState())
@@ -45,6 +47,28 @@ class CameraViewModel @Inject constructor(
 
     init {
         observeCameraEvents()
+        loadUserPreferences()
+    }
+
+    private fun loadUserPreferences() {
+        viewModelScope.launch {
+            // Load grid preferences
+            combine(
+                userPreferences.defaultGridType,
+                userPreferences.gridEnabledByDefault
+            ) { values: Array<*> ->
+                Pair(values[0] as GridType, values[1] as Boolean)
+            }.collect { (gridType, enabled) ->
+                _uiState.update { state ->
+                    state.copy(
+                        gridOverlay = GridOverlay(
+                            enabled = enabled,
+                            type = gridType
+                        )
+                    )
+                }
+            }
+        }
     }
 
     private fun observeCameraEvents() {
