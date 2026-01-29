@@ -123,7 +123,17 @@ class CameraRepository @Inject constructor(
     
     fun setResolution(resolution: CameraResolution) {
         Timber.d("Setting resolution: $resolution")
-        cameraHelper?.previewSize = com.serenegiant.usb.Size(resolution.width, resolution.height)
+        // UVCAndroid Size constructor: Size(type, index, width, height, fps)
+        // type: 0 for uncompressed, 1 for compressed
+        // index: format index, use 0 as default
+        val fps = mutableListOf(resolution.fps)
+        cameraHelper?.previewSize = com.serenegiant.usb.Size(
+            1, // type: 1 = compressed (MJPEG)
+            0, // index: 0 = default format
+            resolution.width,
+            resolution.height,
+            fps
+        )
     }
 }
 
