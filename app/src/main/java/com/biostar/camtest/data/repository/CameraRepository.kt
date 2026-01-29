@@ -174,6 +174,11 @@ class CameraRepository @Inject constructor(
     fun isRecordingActive(): Boolean {
         return videoRecorder?.isRecording?.value ?: false
     }
+    
+    fun updateAudioConfig(bitrate: Int, sampleRate: Int) {
+        val config = AudioConfig(bitrate = bitrate, sampleRate = sampleRate)
+        videoRecorder?.updateAudioConfig(config)
+    }
 }
 
 sealed class CameraEvent {

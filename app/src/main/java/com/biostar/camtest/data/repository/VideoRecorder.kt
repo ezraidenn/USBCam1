@@ -16,7 +16,8 @@ import java.io.File
 
 class VideoRecorder(
     private val context: Context,
-    private val cameraHelper: ICameraHelper
+    private val cameraHelper: ICameraHelper,
+    private var audioConfig: AudioConfig = AudioConfig()
 ) {
     private val _isRecording = MutableStateFlow(false)
     val isRecording: StateFlow<Boolean> = _isRecording.asStateFlow()
@@ -26,13 +27,22 @@ class VideoRecorder(
     
     private var startTime: Long = 0
     
+    fun updateAudioConfig(config: AudioConfig) {
+        audioConfig = config
+        Timber.d("Audio config updated: bitrate=${config.bitrate}, sampleRate=${config.sampleRate}")
+    }
+    
     fun startRecording(
         onSuccess: (String) -> Unit,
         onError: (String) -> Unit
     ) {
         try {
-            // Create file in Movies directory
-            val file = FileUtils.getCaptureFile(context, Environment.DIRECTORY_MOVIES, ".mp4")
+            // Create file in Movies directory with timestamp
+            val timestamp = System.currentTimeMillis()
+            val fileName = "USB_CAM_$timestamp.mp4"
+            val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "USBCam/$fileName")
+            file.parentFile?.mkdirs()
+            
             val options = VideoCapture.OutputFileOptions.Builder(file).build()
             
             // Alternative: Save to MediaStore directly

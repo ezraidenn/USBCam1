@@ -53,19 +53,33 @@ class CameraViewModel @Inject constructor(
     private fun loadUserPreferences() {
         viewModelScope.launch {
             // Load grid preferences
-            combine(
-                userPreferences.defaultGridType,
-                userPreferences.gridEnabledByDefault
-            ) { values: Array<*> ->
-                Pair(values[0] as GridType, values[1] as Boolean)
-            }.collect { (gridType, enabled) ->
-                _uiState.update { state ->
-                    state.copy(
-                        gridOverlay = GridOverlay(
-                            enabled = enabled,
-                            type = gridType
+            launch {
+                combine(
+                    userPreferences.defaultGridType,
+                    userPreferences.gridEnabledByDefault
+                ) { values: Array<*> ->
+                    Pair(values[0] as GridType, values[1] as Boolean)
+                }.collect { (gridType, enabled) ->
+                    _uiState.update { state ->
+                        state.copy(
+                            gridOverlay = GridOverlay(
+                                enabled = enabled,
+                                type = gridType
+                            )
                         )
-                    )
+                    }
+                }
+            }
+            
+            // Load audio preferences
+            launch {
+                combine(
+                    userPreferences.audioBitrate,
+                    userPreferences.audioSampleRate
+                ) { values: Array<*> ->
+                    Pair(values[0] as Int, values[1] as Int)
+                }.collect { (bitrate, sampleRate) ->
+                    cameraRepository.updateAudioConfig(bitrate, sampleRate)
                 }
             }
         }
@@ -73,6 +87,20 @@ class CameraViewModel @Inject constructor(
 
     private fun observeCameraEvents() {
         viewModelScope.launch {
+            // Observe recording state
+            launch {
+                cameraRepository.isRecording.collect { recording ->
+                    _uiState.update { it.copy(isRecording = recording) }
+                }
+            }
+            
+            // Observe recording duration
+            launch {
+                cameraRepository.recordingDuration.collect { duration ->
+                    _uiState.update { it.copy(recordingDuration = duration) }
+                }
+            }
+            
             cameraRepository.observeCameraEvents().collect { event ->
                 when (event) {
                     is CameraEvent.DeviceAttached -> {
@@ -186,34 +214,28 @@ class CameraViewModel @Inject constructor(
     }
 
     fun toggleRecording() {
-        if (_uiState.value.isRecording) {
-            stopRecording()
-        } else {
-            startRecording()
-        }
-    }
-
-    private fun startRecording() {
         viewModelScope.launch {
-            try {
-                _uiState.update { it.copy(isRecording = true, recordingDuration = 0) }
-                Timber.d("Recording started")
-                // TODO: Implement actual video recording
-            } catch (e: Exception) {
-                Timber.e(e, "Error starting recording")
-                _uiState.update { it.copy(isRecording = false) }
-            }
-        }
-    }
-
-    private fun stopRecording() {
-        viewModelScope.launch {
-            try {
-                _uiState.update { it.copy(isRecording = false, recordingDuration = 0) }
+            if (cameraRepository.isRecordingActive()) {
+                // Stop recording
+                cameraRepository.stopRecording()
                 Timber.d("Recording stopped")
-                // TODO: Implement actual video recording stop
-            } catch (e: Exception) {
-                Timber.e(e, "Error stopping recording")
+            } else {
+                // Start recording
+                cameraRepository.startRecording(
+                    onSuccess = { path ->
+                        Timber.d("Video saved: $path")
+                        // TODO: Show success message to user
+                    },
+                    onError = { error ->
+                        Timber.e("Recording error: $error")
+                        _uiState.update { 
+                            it.copy(
+                                errorMessage = "Error al grabar: $error"
+                            )
+                        }
+                    }
+                )
+                Timber.d("Recording started")
             }
         }
     }

@@ -88,6 +88,21 @@ fun SettingsScreen(
                 )
             }
 
+            // Audio Settings Section - NOW FUNCTIONAL
+            SettingsSection(title = "Audio (Video)") {
+                AudioBitrateSelector(
+                    selectedBitrate = uiState.audioBitrate,
+                    onBitrateSelected = { viewModel.setAudioBitrate(it) }
+                )
+                
+                Divider(color = Gray200, modifier = Modifier.padding(horizontal = 16.dp))
+                
+                AudioSampleRateSelector(
+                    selectedSampleRate = uiState.audioSampleRate,
+                    onSampleRateSelected = { viewModel.setAudioSampleRate(it) }
+                )
+            }
+
             // Storage Settings Section
             SettingsSection(title = "Almacenamiento") {
                 Column(
@@ -114,43 +129,17 @@ fun SettingsScreen(
                                 color = Gray900
                             )
                             Text(
-                                text = uiState.autoSaveLocation,
+                                text = "Movies/USBCam/",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Gray600
                             )
                         }
                     }
                     Text(
-                        text = "Las fotos se guardan automáticamente en esta ubicación. Puedes acceder a ellas desde la galería de la app o desde la app Fotos de tu dispositivo.",
+                        text = "Las fotos y videos se guardan automáticamente en Movies/USBCam/. Puedes acceder a ellos desde la galería de la app, la app Fotos de tu dispositivo, o cualquier explorador de archivos.",
                         style = MaterialTheme.typography.bodySmall,
                         color = Gray500,
                         modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-            }
-
-            // Coming Soon Section
-            SettingsSection(title = "Próximamente") {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    ComingSoonItem(
-                        icon = Icons.Default.VideoLibrary,
-                        title = "Grabación de video",
-                        description = "Captura video con audio de alta calidad"
-                    )
-                    ComingSoonItem(
-                        icon = Icons.Default.Mic,
-                        title = "Configuración de audio",
-                        description = "Bitrate y frecuencia de muestreo personalizables"
-                    )
-                    ComingSoonItem(
-                        icon = Icons.Default.FolderOpen,
-                        title = "Selector de carpeta",
-                        description = "Elige dónde guardar tus capturas"
                     )
                 }
             }
@@ -197,7 +186,7 @@ fun SettingsScreen(
             },
             text = {
                 Text(
-                    text = "Versión 2.0.0\n\nAplicación profesional para cámaras USB\n\nCaracterísticas actuales:\n• Captura de fotos HD\n• Grid overlay (3 tipos)\n• Galería integrada\n• Controles profesionales\n• Selector de resolución\n\nPróximamente:\n• Grabación de video\n• Audio personalizable\n• Más opciones de almacenamiento",
+                    text = "Versión 2.0.0\n\nAplicación profesional para cámaras USB\n\nCaracterísticas:\n• Captura de fotos HD\n• Grabación de video con audio\n• Grid overlay (3 tipos)\n• Galería integrada\n• Controles profesionales\n• Selector de resolución\n• Audio personalizable (bitrate y sample rate)\n• Orientación portrait optimizada",
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -228,7 +217,7 @@ fun SettingsScreen(
             },
             text = {
                 Text(
-                    text = "Las resoluciones disponibles dependen de tu cámara USB.\n\nPara cambiar la resolución:\n1. Conecta tu cámara USB\n2. En la pantalla principal, toca el botón de resolución en la parte superior\n3. Selecciona la resolución deseada\n\nResoluciones comunes:\n• 4K (3840x2160) - Cámaras premium\n• 1080p (1920x1080) - Estándar HD\n• 720p (1280x720) - HD básico\n• 480p (640x480) - Compatibilidad",
+                    text = "Las resoluciones disponibles dependen de tu cámara USB.\n\nPara cambiar la resolución:\n1. Conecta tu cámara USB\n2. En la pantalla principal, toca el botón de resolución en la parte superior\n3. Selecciona la resolución deseada\n\nResoluciones comunes:\n• 4K (3840x2160) - Cámaras premium\n• 1080p (1920x1080) - Estándar HD\n• 720p (1280x720) - HD básico\n• 480p (640x480) - Compatibilidad\n\nLa resolución seleccionada se aplica tanto a fotos como a videos.",
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -238,66 +227,6 @@ fun SettingsScreen(
                 }
             }
         )
-    }
-}
-
-@Composable
-private fun ComingSoonItem(
-    icon: ImageVector,
-    title: String,
-    description: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Surface(
-            modifier = Modifier.size(40.dp),
-            shape = RoundedCornerShape(10.dp),
-            color = Gray200
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = Gray500,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = Gray700
-                )
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = AccentBlue.copy(alpha = 0.1f)
-                ) {
-                    Text(
-                        text = "Próximamente",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = AccentBlue,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
-            }
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = Gray500
-            )
-        }
     }
 }
 
