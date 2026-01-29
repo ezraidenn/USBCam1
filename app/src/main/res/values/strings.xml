@@ -1,4 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">USB CAM</string>
+    <string name="app_name">USB CAM Pro</string>
+    
+    <!-- Camera Screen -->
+    <string name="camera_title">Cámara USB</string>
+    <string name="camera_connect_message">Conecta tu cámara USB y presiona iniciar</string>
+    <string name="camera_connecting">Conectando…</string>
+    <string name="camera_start">Iniciar Cámara</string>
+    <string name="camera_stop">Detener</string>
+    <string name="camera_error">Error</string>
+    <string name="camera_retry">Reintentar</string>
+    
+    <!-- Connection Status -->
+    <string name="status_connected">Conectado</string>
+    <string name="status_connecting">Conectando…</string>
+    <string name="status_disconnected">Desconectado</string>
+    <string name="status_error">Error</string>
+    
+    <!-- Recording -->
+    <string name="recording_indicator">REC</string>
+    <string name="photo_saved">Foto guardada en Galería</string>
+    <string name="video_saved">Video guardado en Galería</string>
+    
+    <!-- Gallery -->
+    <string name="gallery_title">Galería</string>
+    <string name="gallery_empty">No hay capturas</string>
+    <string name="gallery_empty_message">Las fotos y videos que captures aparecerán aquí</string>
+    <string name="delete_media">Eliminar</string>
+    <string name="delete_confirm">¿Estás seguro de eliminar este archivo?</string>
+    <string name="delete_cancel">Cancelar</string>
+    
+    <!-- Resolution Selector -->
+    <string name="resolution_title">Seleccionar Resolución</string>
+    <string name="resolution_subtitle">Elige la calidad de video y FPS</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Configuración</string>
+    
+    <!-- Permissions -->
+    <string name="permission_denied">Permisos necesarios denegados</string>
+    <string name="permission_camera">Se requiere permiso de cámara</string>
+    <string name="permission_storage">Se requiere permiso de almacenamiento</string>
+    
+    <!-- Errors -->
+    <string name="error_camera_unavailable">Cámara no disponible</string>
+    <string name="error_usb_permission">Permiso USB denegado</string>
+    <string name="error_save_photo">Error al guardar foto</string>
+    <string name="error_save_video">Error al guardar video</string>
 </resources>
