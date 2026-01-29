@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Filtro genérico para todas las cámaras USB (UVC class) -->
+    <!-- USB Video Class: class=14 (0x0E), subclass=1 o 2 -->
+    <usb-device class="239" subclass="2" />
+    <usb-device class="14" subclass="1" />
+    <usb-device class="14" subclass="2" />
+    
+    <!-- Cámaras web genéricas -->
+    <usb-device class="255" />
+    
+    <!-- Permitir cualquier dispositivo USB para máxima compatibilidad -->
+    <!-- Descomentar si la cámara no se detecta con los filtros anteriores -->
+    <!-- <usb-device /> -->
+</resources>
