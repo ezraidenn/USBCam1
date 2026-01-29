@@ -123,7 +123,7 @@ class CameraRepository @Inject constructor(
     
     fun setResolution(resolution: CameraResolution) {
         Timber.d("Setting resolution: $resolution")
-        cameraHelper?.previewSize = android.util.Size(resolution.width, resolution.height)
+        cameraHelper?.previewSize = com.serenegiant.usb.Size(resolution.width, resolution.height)
     }
 }
 

@@ -7,9 +7,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -41,7 +41,7 @@ fun IconButton(
             .clickable(
                 enabled = enabled,
                 onClick = onClick,
-                indication = rememberRipple(bounded = true),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             ),
         contentAlignment = Alignment.Center
@@ -77,7 +77,7 @@ fun RecordButton(
             .clickable(
                 enabled = enabled,
                 onClick = onClick,
-                indication = rememberRipple(bounded = true),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             )
             .padding(6.dp),
@@ -107,7 +107,7 @@ fun PhotoButton(
             .clickable(
                 enabled = enabled,
                 onClick = onClick,
-                indication = rememberRipple(bounded = true),
+                indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() }
             )
             .padding(4.dp),
