@@ -16,12 +16,20 @@ import kotlinx.coroutines.flow.callbackFlow
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Singleton
 class CameraRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private var cameraHelper: ICameraHelper? = null
+    private var videoRecorder: VideoRecorder? = null
+    private var durationUpdateJob: Job? = null
+    private val scope = CoroutineScope(Dispatchers.Main)
     
     private val _connectedDevices = MutableStateFlow<List<UsbCameraDevice>>(emptyList())
     val connectedDevices: StateFlow<List<UsbCameraDevice>> = _connectedDevices.asStateFlow()
@@ -29,9 +37,16 @@ class CameraRepository @Inject constructor(
     private val _currentDevice = MutableStateFlow<UsbCameraDevice?>(null)
     val currentDevice: StateFlow<UsbCameraDevice?> = _currentDevice.asStateFlow()
     
+    val isRecording: StateFlow<Boolean>
+        get() = videoRecorder?.isRecording ?: MutableStateFlow(false)
+    
+    val recordingDuration: StateFlow<Long>
+        get() = videoRecorder?.recordingDuration ?: MutableStateFlow(0L)
+    
     fun observeCameraEvents(): Flow<CameraEvent> = callbackFlow {
         val helper = CameraHelper()
         cameraHelper = helper
+        videoRecorder = VideoRecorder(context, helper)
         
         val callback = object : ICameraHelper.StateCallback {
             override fun onAttach(device: UsbDevice) {
@@ -134,6 +149,30 @@ class CameraRepository @Inject constructor(
             resolution.height,
             fps
         )
+    }
+    
+    fun startRecording(
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        videoRecorder?.startRecording(onSuccess, onError)
+        // Start duration update job
+        durationUpdateJob = scope.launch {
+            while (videoRecorder?.isRecording?.value == true) {
+                videoRecorder?.updateDuration()
+                delay(100) // Update every 100ms
+            }
+        }
+    }
+    
+    fun stopRecording() {
+        videoRecorder?.stopRecording()
+        durationUpdateJob?.cancel()
+        durationUpdateJob = null
+    }
+    
+    fun isRecordingActive(): Boolean {
+        return videoRecorder?.isRecording?.value ?: false
     }
 }
 
