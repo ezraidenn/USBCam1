@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.biostar.camtest.ui.screens.camera.CameraScreen
 import com.biostar.camtest.ui.screens.gallery.GalleryScreen
+import com.biostar.camtest.ui.screens.settings.SettingsScreen
 
 sealed class Screen(val route: String) {
     object Camera : Screen("camera")
@@ -42,7 +43,11 @@ fun USBCamNavigation(
         }
 
         composable(Screen.Settings.route) {
-            // TODO: Implement settings screen
+            SettingsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
