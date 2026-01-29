@@ -138,11 +138,18 @@ fun CameraScreen(
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            GlassButton(
-                                icon = Icons.Default.GridOn,
-                                onClick = { viewModel.toggleGridOverlay() },
-                                isSelected = uiState.gridOverlay.enabled
-                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                GlassButton(
+                                    icon = Icons.Default.GridOn,
+                                    onClick = { viewModel.toggleGridOverlay() },
+                                    isSelected = uiState.gridOverlay.enabled
+                                )
+                                
+                                GlassButton(
+                                    icon = Icons.Default.Tune,
+                                    onClick = { viewModel.showCameraControls(true) }
+                                )
+                            }
 
                             GlassButton(
                                 icon = Icons.Default.PhotoLibrary,

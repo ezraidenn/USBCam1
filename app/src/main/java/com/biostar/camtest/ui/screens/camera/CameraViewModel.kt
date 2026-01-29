@@ -30,6 +30,7 @@ data class CameraUiState(
     val isMuted: Boolean = false,
     val showResolutionSheet: Boolean = false,
     val showDeviceSheet: Boolean = false,
+    val showCameraControls: Boolean = false,
     val errorMessage: String? = null
 )
 
@@ -290,6 +291,17 @@ class CameraViewModel @Inject constructor(
 
     fun showResolutionSheet(show: Boolean) {
         _uiState.update { it.copy(showResolutionSheet = show) }
+    }
+    
+    fun showCameraControls(show: Boolean) {
+        if (show) {
+            cameraRepository.initializeCameraControls()
+        }
+        _uiState.update { it.copy(showCameraControls = show) }
+    }
+    
+    fun updateCameraControl(controlId: Int, value: Int) {
+        cameraRepository.getCameraControlsManager()?.setControlValue(controlId, value)
     }
 
     fun showDeviceSheet(show: Boolean) {
