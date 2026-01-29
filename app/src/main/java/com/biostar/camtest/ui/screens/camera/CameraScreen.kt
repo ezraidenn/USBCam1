@@ -73,9 +73,14 @@ fun CameraScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Gray800)
             ) {
+                // Background with rounded corners
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Gray700)
+                )
                 when (val state = uiState.cameraState) {
                     is CameraState.Idle, is CameraState.Connecting -> {
                         CameraPlaceholder(

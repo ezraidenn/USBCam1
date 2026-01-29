@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -13,23 +15,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.biostar.camtest.data.models.GridType
 import com.biostar.camtest.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     var showAboutDialog by remember { mutableStateOf(false) }
-    var showQualityDialog by remember { mutableStateOf(false) }
-    var showGridDialog by remember { mutableStateOf(false) }
-    var showStorageDialog by remember { mutableStateOf(false) }
-    var showAudioDialog by remember { mutableStateOf(false) }
-    var showFeedbackDialog by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -67,33 +68,45 @@ fun SettingsScreen(
         ) {
             // Camera Settings Section
             SettingsSection(title = "Cámara") {
-                SettingsItem(
-                    icon = Icons.Default.Videocam,
-                    title = "Calidad de video",
-                    subtitle = "Ajustar resolución y FPS",
-                    onClick = { showQualityDialog = true }
+                // Video Quality
+                VideoQualitySelector(
+                    selectedQuality = uiState.videoQuality,
+                    onQualitySelected = { viewModel.setVideoQuality(it) }
                 )
-                SettingsItem(
-                    icon = Icons.Default.GridOn,
-                    title = "Grid por defecto",
-                    subtitle = "Regla de 3, cuadrícula o proporción áurea",
-                    onClick = { showGridDialog = true }
-                )
-                SettingsItem(
-                    icon = Icons.Default.PhotoLibrary,
-                    title = "Ubicación de guardado",
-                    subtitle = "Carpeta de fotos y videos",
-                    onClick = { showStorageDialog = true }
+                
+                Divider(color = Gray200, modifier = Modifier.padding(horizontal = 16.dp))
+                
+                // Grid Settings
+                GridSettingsSection(
+                    defaultGridType = uiState.defaultGridType,
+                    gridEnabledByDefault = uiState.gridEnabledByDefault,
+                    onGridTypeSelected = { viewModel.setDefaultGridType(it) },
+                    onGridEnabledChanged = { viewModel.setGridEnabledByDefault(it) }
                 )
             }
 
             // Audio Settings Section
             SettingsSection(title = "Audio") {
+                AudioBitrateSelector(
+                    selectedBitrate = uiState.audioBitrate,
+                    onBitrateSelected = { viewModel.setAudioBitrate(it) }
+                )
+                
+                Divider(color = Gray200, modifier = Modifier.padding(horizontal = 16.dp))
+                
+                AudioSampleRateSelector(
+                    selectedSampleRate = uiState.audioSampleRate,
+                    onSampleRateSelected = { viewModel.setAudioSampleRate(it) }
+                )
+            }
+
+            // Storage Settings Section
+            SettingsSection(title = "Almacenamiento") {
                 SettingsItem(
-                    icon = Icons.Default.Mic,
-                    title = "Calidad de audio",
-                    subtitle = "Bitrate y frecuencia de muestreo",
-                    onClick = { showAudioDialog = true }
+                    icon = Icons.Default.Folder,
+                    title = "Ubicación de guardado",
+                    subtitle = uiState.autoSaveLocation,
+                    onClick = { /* TODO: Implement folder picker */ }
                 )
             }
 
@@ -104,12 +117,6 @@ fun SettingsScreen(
                     title = "Acerca de",
                     subtitle = "Versión 2.0.0",
                     onClick = { showAboutDialog = true }
-                )
-                SettingsItem(
-                    icon = Icons.Default.BugReport,
-                    title = "Reportar problema",
-                    subtitle = "Enviar feedback",
-                    onClick = { showFeedbackDialog = true }
                 )
             }
 
@@ -125,97 +132,395 @@ fun SettingsScreen(
         }
     }
 
-    // Dialogs
+    // About Dialog
     if (showAboutDialog) {
-        InfoDialog(
-            icon = Icons.Default.Videocam,
-            title = "USB CAM Pro",
-            message = "Versión 2.0.0\n\nAplicación profesional para cámaras USB\n\nCaracterísticas:\n• Grabación de video HD\n• Captura de fotos\n• Grid overlay\n• Galería integrada\n• Controles profesionales",
-            onDismiss = { showAboutDialog = false }
-        )
-    }
-    
-    if (showQualityDialog) {
-        InfoDialog(
-            icon = Icons.Default.Videocam,
-            title = "Calidad de Video",
-            message = "La calidad de video se ajusta automáticamente según la resolución seleccionada en la pantalla de cámara.\n\nResoluciones disponibles:\n• 4K (3840x2160)\n• 1080p (1920x1080)\n• 720p (1280x720)\n\nFPS: 30/60 según capacidad de la cámara",
-            onDismiss = { showQualityDialog = false }
-        )
-    }
-    
-    if (showGridDialog) {
-        InfoDialog(
-            icon = Icons.Default.GridOn,
-            title = "Grid Overlay",
-            message = "Activa el grid desde el botón en la pantalla de cámara.\n\nTipos disponibles:\n• Regla de 3 (Rule of Thirds)\n• Cuadrícula (Square Grid)\n• Proporción Áurea (Golden Ratio)\n\nÚsalo para mejorar la composición de tus fotos y videos.",
-            onDismiss = { showGridDialog = false }
-        )
-    }
-    
-    if (showStorageDialog) {
-        InfoDialog(
-            icon = Icons.Default.PhotoLibrary,
-            title = "Ubicación de Guardado",
-            message = "Las fotos y videos se guardan en:\n\nPictures/USBCam/\n\nPuedes acceder a ellos desde:\n• La galería de la app\n• La app Fotos de tu dispositivo\n• Cualquier explorador de archivos",
-            onDismiss = { showStorageDialog = false }
-        )
-    }
-    
-    if (showAudioDialog) {
-        InfoDialog(
-            icon = Icons.Default.Mic,
-            title = "Calidad de Audio",
-            message = "Configuración de audio para grabación:\n\nBitrate: 128 kbps\nFrecuencia: 44.1 kHz\nCanales: Estéreo\n\nEl audio se captura automáticamente durante la grabación de video.",
-            onDismiss = { showAudioDialog = false }
-        )
-    }
-    
-    if (showFeedbackDialog) {
-        InfoDialog(
-            icon = Icons.Default.BugReport,
-            title = "Reportar Problema",
-            message = "¿Encontraste un problema?\n\nPor favor contacta al desarrollador con:\n• Descripción del problema\n• Pasos para reproducirlo\n• Modelo de cámara USB\n• Versión de Android\n\nGracias por ayudarnos a mejorar.",
-            onDismiss = { showFeedbackDialog = false }
+        AlertDialog(
+            onDismissRequest = { showAboutDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Videocam,
+                    contentDescription = null,
+                    tint = AccentBlue,
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = "USB CAM Pro",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Versión 2.0.0\n\nAplicación profesional para cámaras USB\n\nCaracterísticas:\n• Grabación de video HD\n• Captura de fotos\n• Grid overlay\n• Galería integrada\n• Controles profesionales",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showAboutDialog = false }) {
+                    Text("Cerrar")
+                }
+            }
         )
     }
 }
 
 @Composable
-private fun InfoDialog(
-    icon: ImageVector,
-    title: String,
-    message: String,
-    onDismiss: () -> Unit
+private fun VideoQualitySelector(
+    selectedQuality: String,
+    onQualitySelected: (String) -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = {
+    val qualities = listOf("4K", "1080p", "720p", "480p")
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             Icon(
-                imageVector = icon,
+                imageVector = Icons.Default.Videocam,
                 contentDescription = null,
                 tint = AccentBlue,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(24.dp)
             )
-        },
-        title = {
             Text(
-                text = title,
-                fontWeight = FontWeight.Bold
+                text = "Calidad de video",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Gray900
             )
-        },
-        text = {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Entendido")
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            qualities.forEach { quality ->
+                QualityChip(
+                    text = quality,
+                    selected = quality == selectedQuality,
+                    onClick = { onQualitySelected(quality) },
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun QualityChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .height(40.dp)
+            .selectable(
+                selected = selected,
+                onClick = onClick,
+                role = Role.RadioButton
+            ),
+        shape = RoundedCornerShape(12.dp),
+        color = if (selected) AccentBlue else Gray100,
+        contentColor = if (selected) White else Gray700
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+            )
+        }
+    }
+}
+
+@Composable
+private fun GridSettingsSection(
+    defaultGridType: GridType,
+    gridEnabledByDefault: Boolean,
+    onGridTypeSelected: (GridType) -> Unit,
+    onGridEnabledChanged: (Boolean) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.GridOn,
+                contentDescription = null,
+                tint = AccentBlue,
+                modifier = Modifier.size(24.dp)
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Grid por defecto",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Gray900
+                )
+                Text(
+                    text = "Activar automáticamente al iniciar",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Gray600
+                )
+            }
+            Switch(
+                checked = gridEnabledByDefault,
+                onCheckedChange = onGridEnabledChanged,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = White,
+                    checkedTrackColor = AccentBlue,
+                    uncheckedThumbColor = White,
+                    uncheckedTrackColor = Gray300
+                )
+            )
+        }
+        
+        if (gridEnabledByDefault) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectableGroup(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                GridTypeOption(
+                    gridType = GridType.RULE_OF_THIRDS,
+                    label = "Regla de 3",
+                    description = "Composición clásica",
+                    selected = defaultGridType == GridType.RULE_OF_THIRDS,
+                    onSelected = { onGridTypeSelected(GridType.RULE_OF_THIRDS) }
+                )
+                GridTypeOption(
+                    gridType = GridType.SQUARE,
+                    label = "Cuadrícula",
+                    description = "Grid uniforme 4x4",
+                    selected = defaultGridType == GridType.SQUARE,
+                    onSelected = { onGridTypeSelected(GridType.SQUARE) }
+                )
+                GridTypeOption(
+                    gridType = GridType.GOLDEN_RATIO,
+                    label = "Proporción Áurea",
+                    description = "Composición avanzada",
+                    selected = defaultGridType == GridType.GOLDEN_RATIO,
+                    onSelected = { onGridTypeSelected(GridType.GOLDEN_RATIO) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GridTypeOption(
+    gridType: GridType,
+    label: String,
+    description: String,
+    selected: Boolean,
+    onSelected: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(
+                selected = selected,
+                onClick = onSelected,
+                role = Role.RadioButton
+            )
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = null,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = AccentBlue,
+                unselectedColor = Gray400
+            )
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = Gray900
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = Gray600
+            )
+        }
+    }
+}
+
+@Composable
+private fun AudioBitrateSelector(
+    selectedBitrate: Int,
+    onBitrateSelected: (Int) -> Unit
+) {
+    val bitrates = listOf(
+        64000 to "64 kbps",
+        128000 to "128 kbps",
+        192000 to "192 kbps",
+        256000 to "256 kbps"
     )
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.GraphicEq,
+                contentDescription = null,
+                tint = AccentBlue,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = "Bitrate de audio",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Gray900
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .selectableGroup(),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            bitrates.forEach { (bitrate, label) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = bitrate == selectedBitrate,
+                            onClick = { onBitrateSelected(bitrate) },
+                            role = Role.RadioButton
+                        )
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    RadioButton(
+                        selected = bitrate == selectedBitrate,
+                        onClick = null,
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = AccentBlue,
+                            unselectedColor = Gray400
+                        )
+                    )
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Gray900
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AudioSampleRateSelector(
+    selectedSampleRate: Int,
+    onSampleRateSelected: (Int) -> Unit
+) {
+    val sampleRates = listOf(
+        44100 to "44.1 kHz",
+        48000 to "48 kHz"
+    )
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Mic,
+                contentDescription = null,
+                tint = AccentBlue,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = "Frecuencia de muestreo",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Gray900
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .selectableGroup(),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            sampleRates.forEach { (sampleRate, label) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = sampleRate == selectedSampleRate,
+                            onClick = { onSampleRateSelected(sampleRate) },
+                            role = Role.RadioButton
+                        )
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    RadioButton(
+                        selected = sampleRate == selectedSampleRate,
+                        onClick = null,
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = AccentBlue,
+                            unselectedColor = Gray400
+                        )
+                    )
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Gray900
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -241,9 +546,7 @@ private fun SettingsSection(
             color = White,
             shadowElevation = 1.dp
         ) {
-            Column(
-                modifier = Modifier.padding(vertical = 8.dp)
-            ) {
+            Column {
                 content()
             }
         }
