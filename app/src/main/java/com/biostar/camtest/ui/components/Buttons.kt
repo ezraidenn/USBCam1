@@ -1,7 +1,8 @@
 package com.biostar.camtest.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -60,35 +62,55 @@ fun RecordButton(
     isRecording: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    size: Dp = 72.dp,
+    size: Dp = 76.dp,
     enabled: Boolean = true
 ) {
     val scale by animateFloatAsState(
-        targetValue = if (isRecording) 0.85f else 1f,
+        targetValue = if (isRecording) 0.9f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "record_button_scale"
     )
     
-    Box(
+    val innerScale by animateFloatAsState(
+        targetValue = if (isRecording) 0.5f else 0.85f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "inner_scale"
+    )
+    
+    Surface(
         modifier = modifier
             .size(size)
-            .scale(scale)
-            .clip(CircleShape)
-            .background(if (enabled) White else Gray300)
-            .clickable(
-                enabled = enabled,
-                onClick = onClick,
-                indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
-            )
-            .padding(6.dp),
-        contentAlignment = Alignment.Center
+            .scale(scale),
+        shape = CircleShape,
+        color = if (enabled) White else Gray300,
+        shadowElevation = if (enabled) 4.dp else 0.dp
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(if (isRecording) RoundedCornerShape(8.dp) else CircleShape)
-                .background(if (enabled) RecordingRed else Gray400)
-        )
+                .clickable(
+                    enabled = enabled,
+                    onClick = onClick,
+                    indication = ripple(),
+                    interactionSource = remember { MutableInteractionSource() }
+                )
+                .padding(6.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .scale(innerScale)
+                    .clip(if (isRecording) RoundedCornerShape(6.dp) else CircleShape)
+                    .background(if (enabled) RecordingRed else Gray400)
+            )
+        }
     }
 }
 
@@ -96,28 +118,47 @@ fun RecordButton(
 fun PhotoButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    size: Dp = 56.dp,
+    size: Dp = 60.dp,
     enabled: Boolean = true
 ) {
-    Box(
+    val scale by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "photo_button_scale"
+    )
+    
+    Surface(
         modifier = modifier
             .size(size)
-            .clip(CircleShape)
-            .background(if (enabled) White else Gray300)
-            .clickable(
-                enabled = enabled,
-                onClick = onClick,
-                indication = ripple(),
-                interactionSource = remember { MutableInteractionSource() }
-            )
-            .padding(4.dp),
-        contentAlignment = Alignment.Center
+            .scale(scale),
+        shape = CircleShape,
+        color = if (enabled) White else Gray300,
+        shadowElevation = if (enabled) 4.dp else 0.dp
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(CircleShape)
-                .background(Color.Transparent)
-        )
+                .clickable(
+                    enabled = enabled,
+                    onClick = onClick,
+                    indication = ripple(),
+                    interactionSource = remember { MutableInteractionSource() }
+                )
+                .padding(5.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(
+                        width = 3.dp,
+                        color = if (enabled) Gray800 else Gray400,
+                        shape = CircleShape
+                    )
+            )
+        }
     }
 }

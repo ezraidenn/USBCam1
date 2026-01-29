@@ -1,23 +1,27 @@
 package com.biostar.camtest.ui.screens.camera
 
 import android.view.TextureView
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Videocam
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -43,7 +47,14 @@ fun CameraScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(White)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Gray50,
+                        Gray100
+                    )
+                )
+            )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Top bar
@@ -61,7 +72,9 @@ fun CameraScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .background(Black)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Gray900)
             ) {
                 when (val state = uiState.cameraState) {
                     is CameraState.Idle, is CameraState.Connecting -> {
@@ -112,20 +125,20 @@ fun CameraScreen(
                             GridOverlay(gridType = uiState.gridOverlay.type)
                         }
 
-                        // Top overlay controls
+                        // Top overlay controls with glassmorphism
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            IconButton(
+                            GlassButton(
                                 icon = Icons.Default.GridOn,
                                 onClick = { viewModel.toggleGridOverlay() },
                                 isSelected = uiState.gridOverlay.enabled
                             )
 
-                            IconButton(
+                            GlassButton(
                                 icon = Icons.Default.PhotoLibrary,
                                 onClick = onNavigateToGallery
                             )
@@ -182,62 +195,112 @@ private fun CameraTopBar(
     onSettingsClick: () -> Unit,
     onResolutionClick: () -> Unit
 ) {
-    Row(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .statusBarsPadding(),
+        color = Color.Transparent
     ) {
-        // Connection status
-        val connectionStatus = when (cameraState) {
-            is CameraState.Connected, is CameraState.Recording -> ConnectionStatus.Connected
-            is CameraState.Connecting -> ConnectionStatus.Connecting
-            is CameraState.Error -> ConnectionStatus.Error
-            else -> ConnectionStatus.Disconnected
-        }
-
-        val deviceName = when (cameraState) {
-            is CameraState.Connected -> cameraState.device.displayName
-            is CameraState.Recording -> cameraState.device.displayName
-            else -> null
-        }
-
-        ConnectionStatusBadge(
-            status = connectionStatus,
-            deviceName = deviceName
-        )
-
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Recording indicator
-            if (isRecording) {
-                RecordingIndicator(duration = recordingDuration)
-            } else {
-                // Resolution selector
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Gray100)
-                        .clickable { onResolutionClick() }
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = selectedResolution,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Gray900
-                    )
-                }
+            // Connection status
+            val connectionStatus = when (cameraState) {
+                is CameraState.Connected, is CameraState.Recording -> ConnectionStatus.Connected
+                is CameraState.Connecting -> ConnectionStatus.Connecting
+                is CameraState.Error -> ConnectionStatus.Error
+                else -> ConnectionStatus.Disconnected
             }
 
-            IconButton(
-                icon = Icons.Default.Settings,
-                onClick = onSettingsClick
+            val deviceName = when (cameraState) {
+                is CameraState.Connected -> cameraState.device.displayName
+                is CameraState.Recording -> cameraState.device.displayName
+                else -> null
+            }
+
+            ConnectionStatusBadge(
+                status = connectionStatus,
+                deviceName = deviceName
             )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Recording indicator
+                AnimatedVisibility(
+                    visible = isRecording,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally()
+                ) {
+                    RecordingIndicator(duration = recordingDuration)
+                }
+
+                // Resolution selector
+                AnimatedVisibility(
+                    visible = !isRecording,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally()
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable(
+                                onClick = onResolutionClick,
+                                indication = ripple(),
+                                interactionSource = remember { MutableInteractionSource() }
+                            ),
+                        color = White.copy(alpha = 0.9f),
+                        shadowElevation = 2.dp
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = Gray700
+                            )
+                            Text(
+                                text = selectedResolution,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Gray900
+                            )
+                        }
+                    }
+                }
+
+                // Settings button
+                Surface(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .clickable(
+                            onClick = onSettingsClick,
+                            indication = ripple(),
+                            interactionSource = remember { MutableInteractionSource() }
+                        ),
+                    color = White.copy(alpha = 0.9f),
+                    shadowElevation = 2.dp
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = Gray700,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -247,6 +310,17 @@ private fun CameraPlaceholder(
     isConnecting: Boolean,
     onStartClick: () -> Unit
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -254,41 +328,60 @@ private fun CameraPlaceholder(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.Usb,
-            contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = AccentBlue
-        )
+        Surface(
+            modifier = Modifier
+                .size(120.dp)
+                .scale(if (isConnecting) scale else 1f),
+            shape = CircleShape,
+            color = AccentBlue.copy(alpha = 0.1f)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Outlined.Videocam,
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp),
+                    tint = AccentBlue
+                )
+            }
+        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
             text = "Cámara USB",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = White
+            color = Gray900
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = if (isConnecting) "Conectando..." else "Conecta tu cámara USB y presiona iniciar",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Gray400,
+            text = if (isConnecting) "Conectando..." else "Conecta tu cámara USB para comenzar",
+            style = MaterialTheme.typography.bodyLarge,
+            color = Gray600,
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(48.dp))
 
-        if (!isConnecting) {
+        AnimatedVisibility(
+            visible = !isConnecting,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
             Button(
                 onClick = onStartClick,
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(0.7f)
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = AccentBlue
+                ),
+                shape = RoundedCornerShape(16.dp),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 4.dp,
+                    pressedElevation = 8.dp
                 )
             ) {
                 Icon(
@@ -296,14 +389,25 @@ private fun CameraPlaceholder(
                     contentDescription = null,
                     modifier = Modifier.size(24.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "Iniciar Cámara",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
-        } else {
-            CircularProgressIndicator(color = AccentBlue)
+        }
+
+        AnimatedVisibility(
+            visible = isConnecting,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
+            CircularProgressIndicator(
+                color = AccentBlue,
+                strokeWidth = 3.dp,
+                modifier = Modifier.size(48.dp)
+            )
         }
     }
 }
@@ -320,40 +424,53 @@ private fun ErrorPlaceholder(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.ErrorOutline,
-            contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = Error
-        )
+        Surface(
+            modifier = Modifier.size(120.dp),
+            shape = CircleShape,
+            color = Error.copy(alpha = 0.1f)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.ErrorOutline,
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp),
+                    tint = Error
+                )
+            }
+        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Error",
+            text = "Error de Conexión",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = White
+            color = Gray900
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
             text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Gray400,
+            style = MaterialTheme.typography.bodyLarge,
+            color = Gray600,
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(48.dp))
 
         Button(
             onClick = onRetry,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.7f)
                 .height(56.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = AccentBlue
+            ),
+            shape = RoundedCornerShape(16.dp),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 4.dp,
+                pressedElevation = 8.dp
             )
         ) {
             Icon(
@@ -361,10 +478,11 @@ private fun ErrorPlaceholder(
                 contentDescription = null,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "Reintentar",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
@@ -451,54 +569,133 @@ private fun CameraBottomControls(
     onRotateClick: () -> Unit,
     onMuteClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(White)
-            .padding(horizontal = 24.dp, vertical = 24.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = White,
+        shadowElevation = 8.dp
     ) {
-        // Left controls
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            IconButton(
-                icon = Icons.Default.FlipCameraAndroid,
-                onClick = onMirrorClick,
-                enabled = enabled,
-                isSelected = isMirrored
-            )
-            IconButton(
-                icon = Icons.Default.RotateRight,
-                onClick = onRotateClick,
-                enabled = enabled
-            )
-        }
-
-        // Center controls
         Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 32.dp)
+                .navigationBarsPadding(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            PhotoButton(
-                onClick = onPhotoClick,
-                size = 56.dp,
-                enabled = enabled
-            )
-            RecordButton(
-                isRecording = isRecording,
-                onClick = onRecordClick,
-                size = 72.dp,
-                enabled = enabled
+            // Left controls
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                ControlButton(
+                    icon = Icons.Default.FlipCameraAndroid,
+                    onClick = onMirrorClick,
+                    enabled = enabled,
+                    isSelected = isMirrored,
+                    contentDescription = "Espejo"
+                )
+                ControlButton(
+                    icon = Icons.Default.RotateRight,
+                    onClick = onRotateClick,
+                    enabled = enabled,
+                    contentDescription = "Rotar"
+                )
+            }
+
+            // Center controls
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                PhotoButton(
+                    onClick = onPhotoClick,
+                    size = 60.dp,
+                    enabled = enabled
+                )
+                RecordButton(
+                    isRecording = isRecording,
+                    onClick = onRecordClick,
+                    size = 76.dp,
+                    enabled = enabled
+                )
+            }
+
+            // Right controls
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                ControlButton(
+                    icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
+                    onClick = onMuteClick,
+                    enabled = enabled,
+                    isSelected = isMuted,
+                    contentDescription = if (isMuted) "Activar audio" else "Silenciar"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ControlButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    isSelected: Boolean = false,
+    contentDescription: String
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (enabled) 1f else 0.8f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "scale"
+    )
+
+    Surface(
+        modifier = Modifier
+            .size(48.dp)
+            .scale(scale)
+            .clip(CircleShape)
+            .clickable(
+                enabled = enabled,
+                onClick = onClick,
+                indication = ripple(),
+                interactionSource = remember { MutableInteractionSource() }
+            ),
+        color = if (isSelected) AccentBlue.copy(alpha = 0.15f) else Gray100,
+        shadowElevation = if (enabled) 2.dp else 0.dp
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = if (isSelected) AccentBlue else if (enabled) Gray700 else Gray400,
+                modifier = Modifier.size(24.dp)
             )
         }
+    }
+}
 
-        // Right controls
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            IconButton(
-                icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                onClick = onMuteClick,
-                enabled = enabled,
-                isSelected = isMuted
+@Composable
+private fun GlassButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    isSelected: Boolean = false
+) {
+    val backgroundColor = if (isSelected) White.copy(alpha = 0.3f) else White.copy(alpha = 0.15f)
+    
+    Surface(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .clickable(
+                onClick = onClick,
+                indication = ripple(color = White),
+                interactionSource = remember { MutableInteractionSource() }
+            ),
+        color = backgroundColor,
+        shadowElevation = 4.dp
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = White,
+                modifier = Modifier.size(22.dp)
             )
         }
     }
